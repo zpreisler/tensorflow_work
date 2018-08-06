@@ -3,14 +3,43 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+class landscape:
+    """
+    Generate random landscape
+    """
+    def __init__(self,n=64):
+        from numpy.random import rand
+        from numpy import sqrt
+        """
+        n: number of gaussians
+        """
+        self.n=n
+        v=rand(n,3)
+        v[:,0]=v[:,0]*50-40
+        v[:,1]=v[:,1]*5-2
+        v[:,2]=v[:,2]*2.0*sqrt(10.0)
+        self.v=v
+
+    def y(self,x,s=0.0):  
+        from numpy.random import uniform,normal
+        y=0
+        for h,mu,sigma in self.v:
+            y+=h*self.gaussian(x,mu,sigma)
+        noise=normal(0.0,s,len(y))
+        return y/self.n+noise
+
+    def gaussian(self,x,mu,sigma):
+        from numpy import exp,sqrt,pi
+        return 1.0/sqrt(2*pi*sigma**2)*exp(-(x-mu)**2/(2.0*sigma**2))
+
+
 def gaussian(x,mu,sigma):
     from numpy import exp,sqrt,pi
     return 1.0/sqrt(2*pi*sigma**2)*exp(-(x-mu)**2/(2.0*sigma**2))
 
-def landscape(x,v):
+def landscape1(x,v):
     y=0
     for h,mu,sigma in v:
-        #print(h,mu,sigma)
         y+=h*gaussian(x,mu,sigma)
     return y/len(v)
 
@@ -35,11 +64,15 @@ def main():
 
     h=landscape_params()
 
+    rr=landscape()
+
     x=linspace(-1,2,100,dtype='float32')
     x=uniform(-1,2,900000)
     x=array(x,dtype='float32')
     #y=landscape(x,h)+uniform(-0.05,0.05,100000)
-    y=landscape(x,h)+normal(0.0,1e-1,900000)
+    #y=landscape1(x,h)+normal(0.0,1e-1,900000)
+
+    y=rr.y(x,0.1)
     y=array(y,dtype='float32')
     #y=log(x)
 
@@ -50,7 +83,10 @@ def main():
     train_dataset=dataset.repeat().batch(1024)
 
     xq=linspace(-1,2,1000,dtype='float32')
-    yq=landscape(xq,h)
+    #yq=landscape1(xq,h)
+
+    yq=rr.y(xq)
+    yq=array(yq,dtype='float32')
 
     xxq=reshape(xq,(-1,1))
     yyq=reshape(yq,(-1,1))
@@ -71,7 +107,7 @@ def main():
     num_classes=1
     num_features=1
     num_trees=37
-    max_nodes=871
+    max_nodes=1871
 
     hparams=tensor_forest.ForestHParams(
             num_classes=num_classes,
