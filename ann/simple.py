@@ -55,7 +55,7 @@ def main():
 
     dataset=tf.data.Dataset.from_tensor_slices((feed_x,feed_y))
     print(dataset)
-    train_dataset=dataset.repeat().batch(2000)
+    train_dataset=dataset.repeat().batch(4000)
 
     d=1000
     xo=linspace(-1,2,d)
@@ -86,11 +86,10 @@ def main():
     ANN
     """
     
-    dense1=tf.layers.dense(inputs=input_layer,units=8,activation=tf.nn.tanh,bias_initializer=tf.truncated_normal_initializer())
-    dense2=tf.layers.dense(inputs=dense1,units=9,activation=tf.nn.tanh,bias_initializer=tf.truncated_normal_initializer())
+    dense1=tf.layers.dense(inputs=input_layer,units=28,activation=tf.nn.tanh,bias_initializer=tf.truncated_normal_initializer())
+    dense2=tf.layers.dense(inputs=dense1,units=29,activation=tf.nn.tanh,bias_initializer=tf.truncated_normal_initializer())
     y_out=tf.layers.dense(inputs=dense2,units=1)
 
-    #cross_entropy=tf.reduce_mean(tf.squared_difference(output_layer,y_out))
     cross_entropy=tf.reduce_mean(tf.nn.l2_loss(output_layer-y_out))
     optimizer=tf.train.AdamOptimizer(0.01)
     minimize=optimizer.minimize(cross_entropy)
