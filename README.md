@@ -5,3 +5,5 @@
 
 ### ANN
 ![artificial neural network](ann/simple.png)
+#### two variables at once
+![artificial neural network](ann/simple2.png)
