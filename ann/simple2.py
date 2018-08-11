@@ -85,6 +85,8 @@ def main():
     feed_x2=reshape(x2_data.x2,(-1,2))
     feed_y2=reshape(y2,(-1,1))
 
+    print(feed_x2)
+
     dataset2=tf.data.Dataset.from_tensor_slices((feed_x2,feed_y2))
 
     dataset=dataset1.concatenate(dataset2)
@@ -162,11 +164,14 @@ def main():
     sess.run(train_init_op)
     sess.run(init_vars)
 
+    print(sess.run(next_element[0]))
+    print(sess.run(next_element[1]))
+
     """
     Training
     """
 
-    for i in range(10000):
+    for i in range(20000):
         a,b=sess.run([cross_entropy,minimize])
         if i%200 == 0:
             print(i,a,b)
