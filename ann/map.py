@@ -7,7 +7,7 @@ def main():
     print("map")
     from numpy import linspace,meshgrid,reshape,column_stack,array,zeros,ones
     from numpy.random import uniform,randint,normal
-    from matplotlib.pyplot import contourf,show,figure
+    from matplotlib.pyplot import contourf,show,figure,savefig,xlabel,ylabel,subplots_adjust
 
     import tensorflow as tf
 
@@ -34,6 +34,12 @@ def main():
     figure()
 
     contourf(X,Y,Z,12,interpolation=None)
+
+    xlabel(r"$x$")
+    ylabel(r"$y$")
+    subplots_adjust(bottom=0.2,left=0.2)
+
+    savefig("_map0.png")
 
     d_in=10000
 
@@ -109,6 +115,11 @@ def main():
 
     figure()
     contourf(X,Y,Z_predicted,12,interpolation=None)
+    xlabel(r"$x$")
+    ylabel(r"$y$")
+    subplots_adjust(bottom=0.2,left=0.2)
+
+    savefig("_map.png")
 
     show()
 

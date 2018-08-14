@@ -5,5 +5,9 @@
 
 ### ANN
 ![artificial neural network](ann/simple.png)
-#### two variables at once
+#### Fitting two variables at once
 ![artificial neural network](ann/simple2.png)
+
+#### Fitting variables in 2d
+![artificial neural network 2d original](ann/map0.png)
+![artificial neural network 2d](ann/map.png)

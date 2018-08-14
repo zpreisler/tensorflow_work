@@ -171,7 +171,7 @@ def main():
     Training
     """
 
-    for i in range(20000):
+    for i in range(10000):
         a,b=sess.run([cross_entropy,minimize])
         if i%200 == 0:
             print(i,a,b)
