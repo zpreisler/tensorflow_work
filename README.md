@@ -9,5 +9,6 @@
 ![artificial neural network](ann/simple2.png)
 
 #### Fitting variables in 2d
-![artificial neural network 2d original](ann/map0.png)
-![artificial neural network 2d](ann/map.png)
+| ![artificial neural network 2d original](ann/map0.png) | ![artificial neural network 2d](ann/map.png) |
+|:--:|:--:|
+| Original x^2+y^2 | Approximated original with noise |
