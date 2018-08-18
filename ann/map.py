@@ -30,7 +30,6 @@ def main():
     true dataset
     """
 
-
     figure()
 
     contourf(X,Y,Z,12,interpolation=None)
