@@ -12,3 +12,7 @@
 | ![artificial neural network 2d original](ann/map0.png) | ![artificial neural network 2d](ann/map.png) |
 |:--:|:--:|
 | Original x^2+y^2 | Approximated original with noise |
+
+#### Fittin density and energy
+
+![artificial neural network](patchy_ann/map.png)
