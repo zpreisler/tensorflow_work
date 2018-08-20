@@ -152,7 +152,7 @@ def main():
 
     cc=contour(X,Y,en,interpolation=None,vmin=1.5,vmax=2.0,levels=[1.5,1.8,1.9,2.0],cmap="YlOrRd")
     clabel(cc,inline=1,fontsize=10,fmt="%.1lf")
-    xlabel(r"$\mu$")
+    xlabel(r"$\beta\mu$")
     ylabel(r"$\epsilon$")
 
     xlim([-10,10])
