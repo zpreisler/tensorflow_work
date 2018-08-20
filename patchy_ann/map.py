@@ -41,7 +41,7 @@ def main():
     print("map")
     from numpy import linspace,meshgrid,reshape,column_stack,array,zeros,ones
     from numpy.random import uniform,randint,normal
-    from matplotlib.pyplot import tricontourf,contourf,show,figure,savefig,xlabel,ylabel,subplots_adjust,plot,colorbar,contour,clabel,subplots,title
+    from matplotlib.pyplot import tricontourf,contourf,show,figure,savefig,xlabel,ylabel,subplots_adjust,plot,colorbar,contour,clabel,subplots,title,xlim,ylim
 
     from tensorflow.train import Saver
 
@@ -50,8 +50,8 @@ def main():
     d1=100
     d2=100
 
-    x=linspace(-20,20,d1)
-    y=linspace(0,20,d2)
+    x=linspace(-10,10,d1)
+    y=linspace(0,10,d2)
     Y,X=meshgrid(y,x)
 
     feed_c=[[a,b] for a in x for b in y]
@@ -154,6 +154,9 @@ def main():
     clabel(cc,inline=1,fontsize=10,fmt="%.1lf")
     xlabel(r"$\mu$")
     ylabel(r"$\epsilon$")
+
+    xlim([-10,10])
+    ylim([0,10])
 
     title("energy per particle $U/N$")
     #plot(data.collective_mu,data.collective_epsilon,"y,")

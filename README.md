@@ -13,6 +13,6 @@
 |:--:|:--:|
 | Original x^2+y^2 | Approximated original with noise |
 
-#### Fittin density and energy
+#### Fitting density and energy
 
 ![artificial neural network](patchy_ann/map.png)
