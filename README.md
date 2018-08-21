@@ -16,3 +16,5 @@
 #### Fitting density and energy
 
 ![artificial neural network](patchy_ann/map.png)
+
+![artificial neural network](patchy_ann/map_p.png)

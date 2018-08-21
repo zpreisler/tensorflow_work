@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 class read_data:
-    def __init__(self,files,offset=33):
+    def __init__(self,files,offset=200):
         from glob import glob
         from numpy import array,fromfile,append,column_stack
         self.files=glob(files)
         self.collective_mu=array([])
         self.collective_epsilon=array([])
+        self.collective_pressure=array([])
         self.collective_en=array([])
         self.collective_rho=array([])
 
@@ -13,15 +14,17 @@ class read_data:
             name=f[:f.rfind('.')]
             mu=fromfile(name+".mu")
             epsilon=fromfile(name+".epsilon")
+            pressure=fromfile(name+".pressure")
             en=fromfile(name+".en")
             rho=fromfile(name+".rho")
 
             self.collective_mu=append(self.collective_mu,mu[offset:])
             self.collective_epsilon=append(self.collective_epsilon,epsilon[offset:])
+            self.collective_pressure=append(self.collective_pressure,pressure[offset:])
             self.collective_en=append(self.collective_en,en[offset:])
             self.collective_rho=append(self.collective_rho,rho[offset:])
 
-        self.x=column_stack((self.collective_epsilon,self.collective_mu))
+        self.x=column_stack((self.collective_epsilon,self.collective_pressure))
 
 def network(input_layer):
     import tensorflow as tf
@@ -47,10 +50,10 @@ def main():
 
     import tensorflow as tf
 
-    d1=200
-    d2=200
+    d1=100
+    d2=100
 
-    x=linspace(-10,10,d1)
+    x=linspace(0,10,d1)
     y=linspace(0,10,d2)
     Y,X=meshgrid(y,x)
 
@@ -62,21 +65,22 @@ def main():
     training data
     """
 
-    data=read_data("/home/zdenek/Projects/tensorflow/patchy_ann/data_4/*.conf")
+    data=read_data("/home/zdenek/Projects/tensorflow/patchy_ann/data_4_p/*.conf")
 
-    x_in=data.collective_mu
+    x_in=data.collective_pressure
     y_in=data.collective_epsilon
 
     feed_c_in=array(column_stack((x_in,y_in)),dtype='float32')
 
     x_out=data.collective_rho
     y_out=data.collective_en
-    feed_z_out=data.collective_en
 
     feed_c_out=array(column_stack((x_out,y_out)),dtype='float32')
 
     feed_z_out=reshape(feed_c_out,(-1,2))
     feed_z_out=array(feed_z_out,dtype='float32')
+
+    print(len(data.collective_rho))
 
     """
     train dataset
@@ -116,7 +120,7 @@ def main():
     sess = tf.Session()
 
     try:
-        saver.restore(sess,"/home/zdenek/tmp/rho.ckpt")
+        saver.restore(sess,"/home/zdenek/tmp/prho.ckpt")
     except ValueError:
         sess.run(init_vars)
         pass
@@ -127,7 +131,7 @@ def main():
     Training
     """
 
-    for i in range(2000):
+    for i in range(20000):
         a,_=sess.run([cross_entropy,minimize])
         if i%400 == 0:
             print(i,a)
@@ -144,18 +148,18 @@ def main():
 
     fig,ax=subplots()
 
-    contourf(X,Y,rho,interpolation=None,vmin=0,vmax=1.2,levels=[0.0,0.1,0.6,0.7,0.8,0.9,1.1,1.2],cmap="YlGn")
+    contourf(X,Y,rho,interpolation=None,vmin=0,levels=[0.0,0.1,0.6,0.7,0.8,0.9,1.1],cmap="YlGn")
     cbar=colorbar()
     cbar.ax.set_ylabel(r"density $\rho$") 
-    clines=contour(X,Y,rho,interpolation=None,vmin=0,vmax=1.2,levels=[0.0,0.1,0.6,0.7,0.8,0.9,1.1,1.2],colors='k',hold='on',linewidths=0.33)
+    clines=contour(X,Y,rho,interpolation=None,vmin=0,levels=[0.0,0.1,0.6,0.7,0.8,0.9,1.1],colors='k',hold='on',linewidths=0.33)
     cbar.add_lines(clines)
 
-    cc=contour(X,Y,en,interpolation=None,vmin=1.5,vmax=2.0,levels=[1.5,1.8,1.9,2.0],cmap="YlOrRd")
+    cc=contour(X,Y,en,interpolation=None,vmin=0.5,vmax=2.0,levels=[0.5,1.0,1.5,1.8,1.9,2.0],cmap="YlOrRd")
     clabel(cc,inline=1,fontsize=10,fmt="%.1lf")
-    xlabel(r"$\beta\mu$")
+    xlabel(r"pressure $p$")
     ylabel(r"$\epsilon$")
 
-    xlim([-10,10])
+    xlim([0,10])
     ylim([0,10])
 
     title("energy per particle $U/N$")
@@ -165,7 +169,7 @@ def main():
     savefig("_map.png")
     savefig("_map.pdf")
 
-    saver.save(sess,"/home/zdenek/tmp/rho.ckpt")
+    saver.save(sess,"/home/zdenek/tmp/prho.ckpt")
 
     show()
 
