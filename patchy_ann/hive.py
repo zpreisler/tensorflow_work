@@ -12,13 +12,17 @@ class hive:
         self.files=glob(files)
         self.attr=['en','mu','rho','epsilon']
         self.__alloc_attr__()
+        self.__get_attr__()
 
-        for f in self.files:
+    def __get_attr__(self):
+        from numpy import fromfile,append
+        for f in self.files[:]:
             name=f[:f.rfind('.')+1]
             for a in self.attr:
-                t=fromfile(name+a)
                 attr='__collective_'+a
-                t=append(getattr(self,attr),t)
+                t=fromfile(name+a)
+                q=getattr(self,attr)
+                t=append(q,t)
                 setattr(self,attr,t)
 
     def __alloc_attr__(self):
@@ -29,3 +33,6 @@ class hive:
 a=hive('data/*.conf')
 
 print(a.__collective_mu)
+
+for x in a.__collective_mu:
+    print(x)
