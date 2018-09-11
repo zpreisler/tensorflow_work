@@ -53,8 +53,8 @@ def main():
     d1=100
     d2=100
 
-    x=linspace(0,10,d1)
-    y=linspace(0,10,d2)
+    x=linspace(0.0001,20,d1)
+    y=linspace(0.0001,20,d2)
     Y,X=meshgrid(y,x)
 
     feed_c=[[a,b] for a in x for b in y]
@@ -67,8 +67,8 @@ def main():
 
     data=read_data("/home/zdenek/Projects/tensorflow/patchy_ann/data_4_p/*.conf")
 
-    x_in=data.collective_pressure
-    y_in=data.collective_epsilon
+    y_in=data.collective_pressure*data.collective_epsilon
+    x_in=1.0/(data.collective_epsilon)
 
     feed_c_in=array(column_stack((x_in,y_in)),dtype='float32')
 
@@ -131,7 +131,7 @@ def main():
     Training
     """
 
-    for i in range(20000):
+    for i in range(2000):
         a,_=sess.run([cross_entropy,minimize])
         if i%400 == 0:
             print(i,a)
@@ -159,11 +159,11 @@ def main():
     xlabel(r"pressure $p$")
     ylabel(r"$\epsilon$")
 
-    xlim([0,10])
-    ylim([0,10])
+    xlim([0.0001,20])
+    ylim([0.0001,20])
 
     title("energy per particle $U/N$")
-    #plot(data.collective_mu,data.collective_epsilon,"y,")
+    #plot(data.collective_epsilon[data.collective_en>1.9],data.collective_pressure[data.collective_en>1.9],"r.")
 
     subplots_adjust(bottom=0.17,left=0.17)
     savefig("_map.png")
