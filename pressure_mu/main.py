@@ -15,7 +15,7 @@ class network:
         self.input_layer=input_layer
         self.build_graph()
 
-        with tf.variable_scope('training_counters'):
+        with tf.variable_scope('training_counter'):
             self.global_step=tf.train.get_or_create_global_step()
 
         self.loss=None
@@ -48,7 +48,7 @@ class network:
 
     def define_minimize(self):
         import tensorflow as tf
-        self.minimize=self.optimizer.minimize(self.loss)
+        self.minimize=self.optimizer.minimize(self.loss,global_step=self.global_step)
 
 def model_fn(features,labels,mode):
     import tensorflow as tf
@@ -74,7 +74,8 @@ def get_input_fn(data):
         import tensorflow as tf
 
         dataset=tf.data.Dataset.from_tensor_slices((input_data,output_data))
-        train_dataset=dataset.repeat().batch(256)
+        #train_dataset=dataset.repeat().batch(256)
+        train_dataset=dataset.batch(256)
 
         iterator=tf.data.Iterator.from_structure(train_dataset.output_types,train_dataset.output_shapes)
 
@@ -101,18 +102,18 @@ def main(argv):
 
     print(data.length)
 
-    input_data=column_stack((data._collective_mu,data._collective_epsilon))
-    output_data=column_stack((data._collective_rho,data._collective_en))
+    #input_data=column_stack((data._collective_mu,data._collective_epsilon))
+    #output_data=column_stack((data._collective_rho,data._collective_en))
 
-    dataset=tf.data.Dataset.from_tensor_slices((input_data,output_data))
-    train_dataset=dataset.repeat().batch(32)
+    #dataset=tf.data.Dataset.from_tensor_slices((input_data,output_data))
+    #train_dataset=dataset.batch(32)
 
-    iterator=tf.data.Iterator.from_structure(train_dataset.output_types,train_dataset.output_shapes)
-    next_element=iterator.get_next()
-    train_init_op=iterator.make_initializer(train_dataset)
+    #iterator=tf.data.Iterator.from_structure(train_dataset.output_types,train_dataset.output_shapes)
+    #next_element=iterator.get_next()
+    #train_init_op=iterator.make_initializer(train_dataset)
 
-    input_layer=next_element[0]
-    output_target=next_element[1]
+    #input_layer=next_element[0]
+    #output_target=next_element[1]
 
     #model=network(input_layer);
 
@@ -135,17 +136,13 @@ def main(argv):
 
     train_input_fn,train_init_hook=get_input_fn(data)
 
-    #print(train_input_fn)
-
-    #print("""###########""")
-
     estimator=tf.estimator.Estimator(model_fn=model_fn, model_dir='log')
     
     train_spec=tf.estimator.TrainSpec(input_fn=train_input_fn,hooks=[train_init_hook])
 
     tf.logging.set_verbosity(tf.logging.INFO)
 
-    estimator.train(input_fn=train_input_fn,hooks=[train_init_hook],steps=40)
+    estimator.train(input_fn=train_input_fn,hooks=[train_init_hook])
 
 
     #init_vars=tf.group(tf.global_variables_initializer())
