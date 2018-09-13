@@ -4,11 +4,11 @@ class read_data:
         from glob import glob
         from numpy import array,fromfile,append,column_stack
         self.files=glob(files)
-        self.collective_mu=array([])
-        self.collective_epsilon=array([])
-        self.collective_pressure=array([])
-        self.collective_en=array([])
-        self.collective_rho=array([])
+        self._collective_mu=array([])
+        self._collective_epsilon=array([])
+        self._collective_pressure=array([])
+        self._collective_en=array([])
+        self._collective_rho=array([])
 
         for f in self.files:
             name=f[:f.rfind('.')]
@@ -18,13 +18,13 @@ class read_data:
             en=fromfile(name+".en")
             rho=fromfile(name+".rho")
 
-            self.collective_mu=append(self.collective_mu,mu[offset:])
-            self.collective_epsilon=append(self.collective_epsilon,epsilon[offset:])
-            self.collective_pressure=append(self.collective_pressure,pressure[offset:])
-            self.collective_en=append(self.collective_en,en[offset:])
-            self.collective_rho=append(self.collective_rho,rho[offset:])
+            self._collective_mu=append(self._collective_mu,mu[offset:])
+            self._collective_epsilon=append(self._collective_epsilon,epsilon[offset:])
+            self._collective_pressure=append(self._collective_pressure,pressure[offset:])
+            self._collective_en=append(self._collective_en,en[offset:])
+            self._collective_rho=append(self._collective_rho,rho[offset:])
 
-        self.x=column_stack((self.collective_epsilon,self.collective_pressure))
+        self.x=column_stack((self._collective_epsilon,self._collective_pressure))
 
 def network(input_layer):
     import tensorflow as tf
@@ -67,27 +67,33 @@ def main():
 
     data=read_data("/home/zdenek/Projects/tensorflow/patchy_ann/data_4_p/*.conf")
 
-    y_in=data.collective_pressure*data.collective_epsilon
-    x_in=1.0/(data.collective_epsilon)
+    from hive import hive
+    data2=hive("/home/zdenek/Projects/tensorflow/patchy_ann/data_4_p/*.conf")
+
+    print(data._collective_mu[:10])
+    print(data2._collective_mu[:10])
+
+    y_in=data._collective_pressure*data._collective_epsilon
+    x_in=1.0/(data._collective_epsilon)
 
     feed_c_in=array(column_stack((x_in,y_in)),dtype='float32')
 
-    x_out=data.collective_rho
-    y_out=data.collective_en
+    x_out=data._collective_rho
+    y_out=data._collective_en
 
     feed_c_out=array(column_stack((x_out,y_out)),dtype='float32')
 
     feed_z_out=reshape(feed_c_out,(-1,2))
     feed_z_out=array(feed_z_out,dtype='float32')
 
-    print(len(data.collective_rho))
+    print(len(data._collective_rho))
 
     """
     train dataset
     """
 
     t_dataset=tf.data.Dataset.from_tensor_slices((feed_c_in,feed_z_out))
-    train_dataset=t_dataset.repeat().shuffle(len(data.collective_en)).batch(512)
+    train_dataset=t_dataset.repeat().shuffle(len(data._collective_en)).batch(512)
 
     """
     Iterator
