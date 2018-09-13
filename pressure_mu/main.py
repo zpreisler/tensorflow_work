@@ -105,7 +105,7 @@ def main(argv):
     output_data=column_stack((data._collective_rho,data._collective_en))
 
     dataset=tf.data.Dataset.from_tensor_slices((input_data,output_data))
-    train_dataset=dataset.repeat().batch(256)
+    train_dataset=dataset.repeat().batch(32)
 
     iterator=tf.data.Iterator.from_structure(train_dataset.output_types,train_dataset.output_shapes)
     next_element=iterator.get_next()
@@ -114,38 +114,38 @@ def main(argv):
     input_layer=next_element[0]
     output_target=next_element[1]
 
-    model=network(input_layer);
+    #model=network(input_layer);
 
-    model.define_loss(output_target)
-    model.define_optimizer()
-    model.define_minimize()
+    #model.define_loss(output_target)
+    #model.define_optimizer()
+    #model.define_minimize()
 
-    init_vars=tf.group(tf.global_variables_initializer())
+    #init_vars=tf.group(tf.global_variables_initializer())
 
-    with tf.Session() as session:
-        session.run(init_vars)
-        session.run(train_init_op)
+    #with tf.Session() as session:
+    #    session.run(init_vars)
+    #    session.run(train_init_op)
         #a,b=session.run(next_element)
 
-        for i in range(20):
-            a,b=session.run([model.loss,model.minimize])
-            print(a)
+    #    for i in range(20):
+    #        a,b=session.run([model.loss,model.minimize])
+    #        print(a)
 
-    print("""###########""")
+    #print("""###########""")
 
-    #train_input_fn,train_init_hook=get_input_fn(data)
+    train_input_fn,train_init_hook=get_input_fn(data)
 
     #print(train_input_fn)
 
     #print("""###########""")
 
-    #estimator=tf.estimator.Estimator(model_fn=model_fn, model_dir='log')
+    estimator=tf.estimator.Estimator(model_fn=model_fn, model_dir='log')
     
-    #train_spec=tf.estimator.TrainSpec(input_fn=train_input_fn,hooks=[train_init_hook])
+    train_spec=tf.estimator.TrainSpec(input_fn=train_input_fn,hooks=[train_init_hook])
 
-    #tf.logging.set_verbosity(tf.logging.INFO)
+    tf.logging.set_verbosity(tf.logging.INFO)
 
-    #estimator.train(input_fn=train_input_fn,hooks=[train_init_hook])
+    estimator.train(input_fn=train_input_fn,hooks=[train_init_hook],steps=40)
 
 
     #init_vars=tf.group(tf.global_variables_initializer())
