@@ -2,11 +2,11 @@
 from numpy import linspace
 from os import system
 
-epsilon=linspace(0.0001,2,7)
-pressure=linspace(0.0001,0.5,7)
-mu=linspace(-3,1,5)
+epsilon=linspace(0.0001,2,25)
+pressure=linspace(0.0001,0.5,25)
+mu=linspace(-3,1,25)
 
-i=1546
+i=1467
 count=0
 
 for u in mu:
