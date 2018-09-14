@@ -44,3 +44,25 @@ class network:
     def define_minimize(self):
         import tensorflow as tf
         self.minimize=self.optimizer.minimize(self.loss,global_step=self.global_step)
+
+def model_fn(features,labels,mode):
+    import tensorflow as tf
+    from model.dense import network
+    model=network(features);
+
+    if mode == tf.estimator.ModeKeys.PREDICT:
+        predictions=model.output_layer
+        return tf.estimator.EstimatorSpec(mode=mode,
+                predictions=predictions)
+
+    if mode == tf.estimator.ModeKeys.TRAIN:
+
+        model.define_loss(labels)
+        model.define_optimizer()
+        model.define_minimize()
+
+        return tf.estimator.EstimatorSpec(loss=model.loss,
+                train_op=model.minimize,
+                mode=mode)
+
+
