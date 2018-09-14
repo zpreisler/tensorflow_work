@@ -2,8 +2,8 @@
 from numpy import linspace
 from os import system
 
-epsilon=linspace(0.0001,2,25)
-pressure=linspace(0.0001,0.5,25)
+epsilon=linspace(0.000001,0.1,2)
+pressure=linspace(0.000001,2,25)
 mu=linspace(-3,1,25)
 
 i=1467
