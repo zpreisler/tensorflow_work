@@ -2,12 +2,12 @@
 from numpy import linspace
 from os import system
 
-epsilon=linspace(0.000001,2,30)
+epsilon=linspace(1.5,4,30)
 pressure=linspace(0.000001,0.2,20)
 mu=linspace(-3,2,30)
 
 i=14671
-count=10000
+count=20000
 
 for u in mu:
     for e in epsilon:

@@ -36,7 +36,7 @@ def main(argv):
 
     tf.logging.set_verbosity(tf.logging.INFO)
 
-    mu_estimator.train(input_fn=mu_train_input_fn,hooks=[mu_train_init_hook],steps=4000)
+    mu_estimator.train(input_fn=mu_train_input_fn,hooks=[mu_train_init_hook],steps=40000)
 
 if __name__=="__main__":
     import tensorflow as tf
