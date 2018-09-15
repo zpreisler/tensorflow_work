@@ -11,7 +11,7 @@ def get_input_fn(data):
     def input_fn():
 
         dataset=tf.data.Dataset.from_tensor_slices((input_data,output_data))
-        train_dataset=dataset.shuffle(2048).repeat().batch(64)
+        train_dataset=dataset.shuffle(len(input_data)).repeat().batch(256)
 
         iterator=tf.data.Iterator.from_structure(train_dataset.output_types,train_dataset.output_shapes)
 
@@ -59,7 +59,7 @@ def get_mu_input_fn(data):
     def input_fn():
 
         dataset=tf.data.Dataset.from_tensor_slices((input_data,output_data))
-        train_dataset=dataset.shuffle(2048).repeat().batch(64)
+        train_dataset=dataset.shuffle(len(input_data)).repeat().batch(256)
 
         iterator=tf.data.Iterator.from_structure(train_dataset.output_types,train_dataset.output_shapes)
 
@@ -70,18 +70,4 @@ def get_mu_input_fn(data):
 
         return iterator.get_next()
 
-    def predict_fn():
-
-        dataset=tf.data.Dataset.from_tensor_slices((input_data))
-        train_dataset=dataset.batch(1)
-
-        iterator=tf.data.Iterator.from_structure(train_dataset.output_types,train_dataset.output_shapes)
-
-        print(dataset)
-
-        init_op=iterator.make_initializer(train_dataset)
-        init_hook.iterator_init_op=init_op
-
-        return iterator.get_next()
-
-    return input_fn,predict_fn,init_hook
+    return input_fn,init_hook

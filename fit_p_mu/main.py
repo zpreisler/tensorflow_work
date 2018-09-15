@@ -23,7 +23,7 @@ def main(argv):
 
     tf.logging.set_verbosity(tf.logging.INFO)
 
-    estimator.train(input_fn=p_train_input_fn,hooks=[p_train_init_hook],steps=20000)
+    estimator.train(input_fn=p_train_input_fn,hooks=[p_train_init_hook],steps=4000)
 
     """
     interpolate from chemical potential
@@ -31,12 +31,12 @@ def main(argv):
 
     data_mu=hive("data/gc*.conf")
 
-    mu_train_input_fn,mu_predict_input_fn,mu_train_init_hook=get_mu_input_fn(data_mu)
+    mu_train_input_fn,mu_train_init_hook=get_mu_input_fn(data_mu)
     mu_estimator=tf.estimator.Estimator(model_fn=model_fn, model_dir='logmu')
 
     tf.logging.set_verbosity(tf.logging.INFO)
 
-    mu_estimator.train(input_fn=mu_train_input_fn,hooks=[mu_train_init_hook],steps=20000)
+    mu_estimator.train(input_fn=mu_train_input_fn,hooks=[mu_train_init_hook],steps=4000)
 
 if __name__=="__main__":
     import tensorflow as tf
