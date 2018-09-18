@@ -8,6 +8,12 @@ def sample_Z(m,n):
     from numpy import random
     return random.uniform(-1,1,size=[m,n])
 
+def linear_Z(m):
+    from numpy import linspace
+    from numpy import column_stack
+    t=linspace(-1,1,m)
+    return column_stack((t,t))
+
 def sample_X(m):
     xy=[]
     from numpy import random
@@ -92,7 +98,8 @@ def main(argv):
         if i%50 == 0:
             print(dloss,gloss)
             
-            g=session.run(generator_sample,feed_dict={Z: Z_batch})
+            Z_linear=linear_Z(batch_size)
+            g=session.run(generator_sample,feed_dict={Z: Z_linear})
 
             figure()
             plot(X_batch[:,0],X_batch[:,1],'.',markersize=1.0)
