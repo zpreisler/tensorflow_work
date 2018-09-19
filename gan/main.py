@@ -43,9 +43,6 @@ def discriminator(X,reuse=False):
 def main(argv):
     print("Generative Adversarial Network")
 
-    X=tf.placeholder(tf.float32,[None,2])
-    Z=tf.placeholder(tf.float32,[None,2])
-
     generator_sample=generator(Z)
     real_logits,real_rep=discriminator(X)
     fake_logits,fake_rep=discriminator(generator_sample,reuse=True)

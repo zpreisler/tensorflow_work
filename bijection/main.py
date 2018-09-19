@@ -8,32 +8,55 @@ def fce_p(x):
     return tf.log(x)
 
 def fce_mu(x):
-    return 2.0*x
+    return 0.5*x
+    #return 2.0*x**2
 
-def projection(X):
-    with tf.variable_scope("projection"):
-        d1=tf.layers.dense(inputs=X,units=8,activation=tf.nn.tanh)
-        d2=tf.layers.dense(inputs=d1,units=8,activation=tf.nn.tanh)
+def proj_p(X):
 
-        out=tf.layers.dense(inputs=d2,units=1)
+    with tf.variable_scope("proj_p"):
+        p1=tf.layers.dense(inputs=X,units=4,activation=tf.nn.tanh,name="p_1")
+        p2=tf.layers.dense(inputs=p1,units=4,activation=tf.nn.tanh,name="p_2")
+
+        out=tf.layers.dense(inputs=p2,units=1,name="p_out")
+
+        return out
+
+def proj_mu(X):
+
+    with tf.variable_scope("proj_mu"):
+        m1=tf.layers.dense(inputs=X,units=5,activation=tf.nn.tanh,name="m_1")
+        m2=tf.layers.dense(inputs=m1,units=5,activation=tf.nn.tanh,name="m_2")
+
+        out=tf.layers.dense(inputs=m2,units=1,name="m_out")
 
         return out
 
 def bijection(X):
-    with tf.variable_scope("bijection"):
-        #rho1=fce_p(X)
-        rho1=projection(X)
-        
-        d1=tf.layers.dense(inputs=X,units=8,activation=tf.nn.tanh)
-        d2=tf.layers.dense(inputs=d1,units=8,activation=tf.nn.tanh)
 
-        mu=tf.layers.dense(inputs=d2,units=1)
-        rho2=fce_mu(mu)
+    with tf.variable_scope("proj_p",reuse=True):
+        p1=tf.layers.dense(inputs=X,units=4,activation=tf.nn.tanh,name="p_1")
+        p2=tf.layers.dense(inputs=p1,units=4,activation=tf.nn.tanh,name="p_2")
+
+        rho1=tf.layers.dense(inputs=p2,units=1,name="p_out")
+
+    with tf.variable_scope("bijection"):
+        
+        d1=tf.layers.dense(inputs=X,units=4,activation=tf.nn.tanh,name="b_1")
+        d2=tf.layers.dense(inputs=d1,units=4,activation=tf.nn.tanh,name="b_2")
+
+        mu=tf.layers.dense(inputs=d2,units=1,name="b_m")
+
+    with tf.variable_scope("proj_mu",reuse=True):
+        m1=tf.layers.dense(inputs=mu,units=5,activation=tf.nn.tanh,name="m_1")
+        m2=tf.layers.dense(inputs=m1,units=5,activation=tf.nn.tanh,name="m_2")
+
+        #rho2=fce_mu(mu)
+        rho2=tf.layers.dense(inputs=m2,units=1,name="m_out")
 
         return rho1,rho2,mu
 
 def main(argv):
-    from numpy import linspace,array,reshape,random,log
+    from numpy import linspace,array,reshape,random,log,sqrt
     from matplotlib.pyplot import show,plot,figure,xlabel,ylabel
     print("""Bijection""")
 
@@ -41,71 +64,86 @@ def main(argv):
     Y=tf.placeholder(tf.float32,[None,1])
 
     """projection"""
-    fp=projection(X)
-    projection_vars=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,scope="projection")
-
-    loss_fp=tf.reduce_mean(tf.nn.l2_loss((fp-Y)))
-    optimizer_fp=tf.train.AdamOptimizer(learning_rate=1e-3)
-
-    train_fp=optimizer_fp.minimize(loss_fp,var_list=projection_vars)
+    out_p=proj_p(X)
+    out_mu=proj_mu(X)
 
     """bijection"""
     rho1,rho2,mu=bijection(X)
 
-    bijection_vars=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,scope="bijection/den")
+    loss_proj_p=tf.reduce_mean(tf.nn.l2_loss((out_p-Y)))
+    loss_proj_mu=tf.reduce_mean(tf.nn.l2_loss((out_mu-Y)))
+    loss_bij=tf.reduce_mean(tf.nn.l2_loss((rho1-rho2)))
 
-    loss=tf.reduce_mean(tf.nn.l2_loss((rho1-rho2)))
-    optimizer=tf.train.AdamOptimizer(learning_rate=1e-3)
+    vars_proj_p=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope="proj_p")
+    vars_proj_mu=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope="proj_mu")
+    vars_bij=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope="bijection")
 
-    train=optimizer.minimize(loss,var_list=bijection_vars)
+    optimizer_proj_p=tf.train.AdamOptimizer(learning_rate=1e-3,name="Adam_p")
+    optimizer_proj_mu=tf.train.AdamOptimizer(learning_rate=1e-3,name="Adam_mu")
+    optimizer_bij=tf.train.AdamOptimizer(learning_rate=1e-3,name="Adam_bij")
 
-    init_vars=tf.group(tf.global_variables_initializer())
+    train_proj_p=optimizer_proj_p.minimize(loss_proj_p,var_list=vars_proj_p)
+    train_proj_mu=optimizer_proj_mu.minimize(loss_proj_mu,var_list=vars_proj_mu)
+    train_bij=optimizer_bij.minimize(loss_bij,var_list=vars_bij)
 
-    session=tf.Session()
+    with tf.Session() as session:
+        tf.global_variables_initializer().run(session=session)    
+        writer=tf.summary.FileWriter("log",session.graph)
 
-    session.run(init_vars)
+        print("""projection p:""")
+        for v in vars_proj_p:
+            print(v)
+        print("""projection mu:""")
+        for v in vars_proj_mu:
+            print(v)
+        print("""bijection:""")
+        for v in vars_bij:
+            print(v)
 
-    print("""projection:""",projection_vars)
-    print("""bijection:""",bijection_vars)
+        for i in range(40000):
 
-    for i in range(10000):
+            x=random.uniform(1.1,10,256)
+            X_batch=reshape(x,(-1,1))
+            Y_batch=reshape(log(x),(-1,1))
 
-        x=random.uniform(1.1,10,64)
-        X_batch=reshape(x,(-1,1))
-        Y_batch=reshape(log(x),(-1,1))
+            _,proj_p_loss=session.run([train_proj_p,loss_proj_p],feed_dict={X: X_batch, Y: Y_batch})
 
-        _,fp_loss=session.run([train_fp,loss_fp],feed_dict={X: X_batch, Y: Y_batch})
+        print("[proj_p_loss]",proj_p_loss)
 
-    print("[fp_loss]",fp_loss)
+        xx=linspace(1.1,10,64)
+        x=random.uniform(1.1,10,256)
+        X_batch=reshape(xx,(-1,1))
+        y=session.run(out_p,feed_dict={X: X_batch})
 
-    x=linspace(1.1,10,64)
-    X_batch=reshape(x,(-1,1))
-    Y_batch=reshape(log(x),(-1,1))
+        figure()
+        plot(xx,log(xx),"k:")
+        plot(xx,y,"ro",alpha=0.33)
 
-    y=session.run(fp,feed_dict={X: X_batch})
+        y=session.run(rho1,feed_dict={X: X_batch})
+        plot(xx,y,"gs",alpha=0.33)
 
-    figure()
-    plot(x,log(x))
-    plot(x,y,"go--",markersize=2.0)
+        for i in range(40000):
 
-    session.run(bijection_vars)
+            x=random.uniform(0.1,5,256)
+            X_batch=reshape(x,(-1,1))
+            Y_batch=reshape(fce_mu(x),(-1,1))
 
-    for i in range(1000):
+            _,proj_mu_loss=session.run([train_proj_mu,loss_proj_mu],feed_dict={X: X_batch, Y: Y_batch})
 
-        x=random.uniform(1.1,10,64)
-        X_batch=reshape(x,(-1,1))
+        print("[proj_mu_loss]",proj_mu_loss)
 
-        _,m,r1,r2,rho_loss=session.run([train,mu,rho1,rho2,loss],feed_dict={X: X_batch})
+        for i in range(20000):
 
-        if i %1000 == 0: 
-            #print("x_batch:",X_batch)
-            #print("mu:",m)
-            #print("rho1:",r1)
-            #print("rho2:",r2)
-            print("[rho_loss]",rho_loss)
+            x=random.uniform(1.1,10,256)
+            X_batch=reshape(x,(-1,1))
 
-    X_batch=reshape(linspace(1.1,10,64),(-1,1))
-    m,r1,r2=session.run([mu,rho1,rho2],feed_dict={X: X_batch})
+            _,m,r1,r2,rho_loss=session.run([train_bij,mu,rho1,rho2,loss_bij],feed_dict={X: X_batch})
+
+            if i %1000 == 0: 
+                print("[rho_loss]",rho_loss)
+
+        X_batch=reshape(linspace(1.1,10,64),(-1,1))
+        r1,r2,m=session.run([rho1,rho2,mu],feed_dict={X: X_batch})
 
     x=reshape(X_batch,(1,-1))[0]
     r1=reshape(r1,(1,-1))[0]
@@ -119,13 +157,13 @@ def main(argv):
     ylabel(r"$\rho$")
 
     figure()
-    plot(m,2.0*m)
+    plot(m,fce_mu(m))
     plot(m,r2,"o--",markersize=1.0)
     xlabel(r"$\mu$")
     ylabel(r"$\rho$")
 
     figure()
-    plot(x,0.5*log(x),markersize=1.0)
+    plot(x,2*log(x),markersize=1.0)
     plot(x,m,"ro--",markersize=1.0)
     xlabel(r"$p$")
     ylabel(r"chemical potential $\mu$")
