@@ -202,6 +202,7 @@ def main():
     legend(frameon=False,loc='best')
     subplots_adjust(bottom=0.2,left=0.2)
     savefig("_simple2.png")
+    savefig("_simple2.pdf")
 
     show()
 

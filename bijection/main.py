@@ -4,12 +4,14 @@ from __future__ import division
 from __future__ import print_function
 import tensorflow as tf
 
-def fce_p(x):
-    return tf.log(x)
+def fce_p(x,s=0.0):
+    from numpy.random import normal,uniform
+    from numpy import log
+    return log(x)+normal(0.0,s,len(x))
 
-def fce_mu(x):
-    return 0.5*x
-    #return 2.0*x**2
+def fce_mu(x,s=0.0):
+    from numpy.random import normal
+    return 0.5*x+normal(0.0,s,len(x))
 
 def proj_p(X):
 
@@ -34,6 +36,7 @@ def proj_mu(X):
 def bijection(X):
 
     with tf.variable_scope("proj_p",reuse=True):
+
         p1=tf.layers.dense(inputs=X,units=4,activation=tf.nn.tanh,name="p_1")
         p2=tf.layers.dense(inputs=p1,units=4,activation=tf.nn.tanh,name="p_2")
 
@@ -47,17 +50,17 @@ def bijection(X):
         mu=tf.layers.dense(inputs=d2,units=1,name="b_m")
 
     with tf.variable_scope("proj_mu",reuse=True):
+
         m1=tf.layers.dense(inputs=mu,units=5,activation=tf.nn.tanh,name="m_1")
         m2=tf.layers.dense(inputs=m1,units=5,activation=tf.nn.tanh,name="m_2")
 
-        #rho2=fce_mu(mu)
         rho2=tf.layers.dense(inputs=m2,units=1,name="m_out")
 
         return rho1,rho2,mu
 
 def main(argv):
     from numpy import linspace,array,reshape,random,log,sqrt
-    from matplotlib.pyplot import show,plot,figure,xlabel,ylabel
+    from matplotlib.pyplot import show,plot,figure,xlabel,ylabel,subplots_adjust,savefig
     print("""Bijection""")
 
     X=tf.placeholder(tf.float32,[None,1])
@@ -100,11 +103,11 @@ def main(argv):
         for v in vars_bij:
             print(v)
 
-        for i in range(40000):
+        for i in range(10000):
 
             x=random.uniform(1.1,10,256)
             X_batch=reshape(x,(-1,1))
-            Y_batch=reshape(log(x),(-1,1))
+            Y_batch=reshape(fce_p(x,s=0.33),(-1,1))
 
             _,proj_p_loss=session.run([train_proj_p,loss_proj_p],feed_dict={X: X_batch, Y: Y_batch})
 
@@ -116,17 +119,23 @@ def main(argv):
         y=session.run(out_p,feed_dict={X: X_batch})
 
         figure()
-        plot(xx,log(xx),"k:")
-        plot(xx,y,"ro",alpha=0.33)
+        plot(xx,fce_p(xx),"k:")
+        plot(xx,y,"r--",alpha=0.33)
 
         y=session.run(rho1,feed_dict={X: X_batch})
-        plot(xx,y,"gs",alpha=0.33)
+        plot(xx,y,"g-.",alpha=0.33)
 
-        for i in range(40000):
+        xlabel(r"pressure $p$")
+        ylabel(r"density $\rho$")
+
+        subplots_adjust(bottom=0.18,left=0.18)
+        savefig("p_rho_.pdf")
+
+        for i in range(10000):
 
             x=random.uniform(0.1,5,256)
             X_batch=reshape(x,(-1,1))
-            Y_batch=reshape(fce_mu(x),(-1,1))
+            Y_batch=reshape(fce_mu(x,s=0.33),(-1,1))
 
             _,proj_mu_loss=session.run([train_proj_mu,loss_proj_mu],feed_dict={X: X_batch, Y: Y_batch})
 
@@ -154,19 +163,25 @@ def main(argv):
     plot(x,log(x))
     plot(x,r1,"o--",markersize=1.0)
     xlabel(r"pressure $p$")
-    ylabel(r"$\rho$")
+    ylabel(r"density $\rho$")
+    subplots_adjust(bottom=0.18,left=0.18)
+    savefig("p_rho.pdf")
 
     figure()
     plot(m,fce_mu(m))
     plot(m,r2,"o--",markersize=1.0)
-    xlabel(r"$\mu$")
-    ylabel(r"$\rho$")
+    xlabel(r"chemical potential $\mu$")
+    ylabel(r"density $\rho$")
+    subplots_adjust(bottom=0.18,left=0.18)
+    savefig("mu_rho.pdf")
 
     figure()
     plot(x,2*log(x),markersize=1.0)
     plot(x,m,"ro--",markersize=1.0)
-    xlabel(r"$p$")
+    xlabel(r"pressure $p$")
     ylabel(r"chemical potential $\mu$")
+    subplots_adjust(bottom=0.18,left=0.18)
+    savefig("p_mu.pdf")
 
     show()
 
