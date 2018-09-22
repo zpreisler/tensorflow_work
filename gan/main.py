@@ -38,6 +38,8 @@ def discriminator(X,reuse=False):
         d3=tf.layers.dense(inputs=d2,units=2,name="d3")
         output_layer=tf.layers.dense(inputs=d3,units=1,name="d_out")
 
+    print(d1)
+
     return output_layer,d3
 
 def main(argv):
@@ -72,14 +74,14 @@ def main(argv):
     train_discriminator=discriminator_optimizer.minimize(discriminator_loss,var_list=discriminator_vars)
 
     batch_size=256
-    steps=10000
-    nsteps=24
+    steps=20000
+    nsteps=8
 
     with tf.Session() as session:
         tf.global_variables_initializer().run(session=session)
         writer=tf.summary.FileWriter("log",session.graph)
 
-        from matplotlib.pyplot import plot,show,figure,close,savefig
+        from matplotlib.pyplot import plot,show,figure,close,savefig,xlabel,ylabel,subplots_adjust,legend,legend
 
         count=0
         for i in range(steps):
@@ -103,8 +105,12 @@ def main(argv):
                 g=session.run(generator_sample,feed_dict={Z: Z_linear})
 
                 figure()
-                plot(X_batch[:,0],X_batch[:,1],'.',markersize=1.0)
-                plot(g[:,0],g[:,1],'.',markersize=1.0)
+                plot(X_batch[:,0],X_batch[:,1],'.',markersize=1.0,label="true")
+                plot(g[:,0],g[:,1],'.',markersize=1.0,label="generated")
+                xlabel(r"x")
+                ylabel(r"g(x)")
+                legend(frameon=False)
+                subplots_adjust(bottom=0.18,left=0.18)
                 savefig("g_%03d.png"%(count))
                 close()
                 
@@ -117,6 +123,15 @@ def main(argv):
                 savefig("fig_%03d.png"%(count))
                 count+=1
                 close()
+
+        figure()
+        plot(X_batch[:,0],X_batch[:,1],'.',markersize=1.0,label="true")
+        plot(g[:,0],g[:,1],'.',markersize=1.0,label="generated")
+        xlabel(r"x")
+        ylabel(r"g(x)")
+        legend(frameon=False)
+        subplots_adjust(bottom=0.18,left=0.18)
+        savefig("rnddist.pdf")
         
 
 if __name__=="__main__":
