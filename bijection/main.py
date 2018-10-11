@@ -3,7 +3,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import tensorflow as tf
-
 def fce_p(x,s=0.0):
     from numpy.random import normal,uniform
     from numpy import log
