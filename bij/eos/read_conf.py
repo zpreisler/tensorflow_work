@@ -12,11 +12,22 @@ def feeder(d):
             dd+=[[_eps,_rho]]
     return array(dd)
 
+def feeder2(d):
+    from numpy import array
+    dd=[]
+    for a in d:
+        _eps=float(*a['epsilon'])
+        _rho=a['.rho'].data.mean()
+        dd+=[[_eps,_rho]]
+    return array(dd)
+
+
 def net(x):
     with tf.variable_scope("net"):
         p1=tf.layers.dense(inputs=x,units=4,activation=tf.nn.tanh,name="p_1")
         p2=tf.layers.dense(inputs=p1,units=4,activation=tf.nn.tanh,name="p_2")
-        p3=tf.layers.dense(inputs=p2,units=4,activation=tf.nn.tanh,name="p_3")
+        #p3=tf.layers.dense(inputs=p2,units=4,activation=tf.nn.tanh,name="p_3")
+        p3=tf.layers.dense(inputs=p2,units=4,name="p_3")
 
         out=tf.layers.dense(inputs=p3,units=1,name="p_out")
 
@@ -40,8 +51,14 @@ def main(argv):
     rho=[x['.rho'].data.mean() for x in d]
     epsilon=[float(*x['epsilon']) for x in d]
 
-    dd=feeder(d)
+    dd=feeder2(d)
     fd=dd.transpose()
+
+    print("dd",dd.shape)
+    print(dd[:,0])
+    e=fd[0]
+    e=e.reshape(1,-1)
+    print(e.shape)
 
     q=[]
     for e in fd[0]:
@@ -53,11 +70,11 @@ def main(argv):
         w+=[[e]]
     w=array(w)
 
-    print("q:",q,q.shape)
+    #print("q:",q,q.shape)
 
     t=linspace(1,8,2048)
     t=t.reshape(2048,1)
-    print("t:",t,t.shape)
+    #print("t:",t,t.shape)
 
     dataset=tf.data.Dataset.from_tensor_slices({'a': q,'b': w})
     vdataset=tf.data.Dataset.from_tensor_slices({'a': t, 'b': t})
@@ -91,15 +108,18 @@ def main(argv):
         session.run(init_vars)
         session.run(init_op)
 
-        saver.restore(session,"log/last.ckpt")
+        try:
+            saver.restore(session,"log/last.ckpt")
+        except tf.errors.NotFoundError:
+            pass
 
-        for i in range(10000):
-            l,_=session.run([loss,train],feed_dict={rate: 1e-3})
+        for i in range(1):
+            l,_=session.run([loss,train],feed_dict={rate: 1e-2})
             if i%500 is 0:
                 print(i,l)
 
-        for i in range(25000):
-            l,_=session.run([loss,train],feed_dict={rate: 1e-4})
+        for i in range(25):
+            l,_=session.run([loss,train],feed_dict={rate: 1e-3})
             if i%500 is 0:
                 print(i,l)
 
@@ -119,7 +139,6 @@ def main(argv):
     xlabel(r"$\beta$")
     ylabel(r"$\rho$")
     show()
-
 
 if __name__=="__main__":
     tf.app.run()
