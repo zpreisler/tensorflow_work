@@ -14,10 +14,11 @@ def feeder(d):
 
 def net(x):
     with tf.variable_scope("net"):
-        p1=tf.layers.dense(inputs=x,units=6,activation=tf.nn.tanh,name="p_1")
-        p2=tf.layers.dense(inputs=p1,units=6,activation=tf.nn.tanh,name="p_2")
+        p1=tf.layers.dense(inputs=x,units=4,activation=tf.nn.tanh,name="p_1")
+        p2=tf.layers.dense(inputs=p1,units=4,activation=tf.nn.tanh,name="p_2")
+        p3=tf.layers.dense(inputs=p2,units=4,activation=tf.nn.tanh,name="p_3")
 
-        out=tf.layers.dense(inputs=p2,units=1,name="p_out")
+        out=tf.layers.dense(inputs=p3,units=1,name="p_out")
 
         return out
 
@@ -26,7 +27,7 @@ def main(argv):
     from myutils import configuration
     from pprint import pprint
     from matplotlib.pyplot import figure,show,plot,xlabel,ylabel
-    from numpy import array
+    from numpy import array,linspace
     print("Reading configurations")
 
     c=configuration(glob('fluid*.conf'))
@@ -54,51 +55,62 @@ def main(argv):
 
     print("q:",q,q.shape)
 
-    dataset0=tf.data.Dataset.from_tensor_slices(q)
-    print(dataset0.output_types)
-    print(dataset0.output_shapes)
 
-    dataset1=tf.data.Dataset.from_tensor_slices(w)
-    print(dataset1.output_types)
-    print(dataset1.output_shapes)
+    t=linspace(1,8,256)
+    t=t.reshape(256,1)
+    print("t:",t,t.shape)
 
-    dataset=tf.data.Dataset.zip((dataset0,dataset1))
+    dataset=tf.data.Dataset.from_tensor_slices({'a': q,'b': w})
+    vdataset=tf.data.Dataset.from_tensor_slices({'a': t, 'b': t})
 
-    train_dataset=dataset.repeat().batch(256)
+    train_dataset=dataset.repeat().shuffle(len(q)).batch(256)
+    v_dataset=vdataset.batch(256)
 
     iterator=tf.data.Iterator.from_structure(train_dataset.output_types,
             train_dataset.output_shapes)
     next_element=iterator.get_next()
 
-    input_layer=next_element[0]
-    output_layer=next_element[1]
-
     init_op=iterator.make_initializer(train_dataset)
+    v_init_op=iterator.make_initializer(v_dataset)
+
+    input_layer=next_element['a']
+    output_layer=next_element['b']
 
     out_rho=net(input_layer)
 
+    rate=tf.placeholder(tf.float64)
+
     loss=tf.reduce_mean(tf.nn.l2_loss((out_rho-output_layer)))
-    optimizer=tf.train.AdamOptimizer(learning_rate=1e-3,name="Adam")
+    optimizer=tf.train.AdamOptimizer(learning_rate=rate,name="Adam")
 
     train=optimizer.minimize(loss)
     init_vars=tf.group(tf.global_variables_initializer())
 
     with tf.Session() as session: 
-        session.run(init_op)
         session.run(init_vars)
+        session.run(init_op)
 
-        #print(next_element)
-        #b=session.run(next_element)
-        #print(b)
+        for i in range(10000):
+            l,_=session.run([loss,train],feed_dict={rate: 5e-2})
+            if i%500 is 0:
+                print(i,l)
 
-        for i in range(1000):
-            l,_=session.run([loss,train])
-            print(l)
+        for i in range(25000):
+            l,_=session.run([loss,train],feed_dict={rate: 1e-3})
+            if i%500 is 0:
+                print(i,l)
+
+        session.run(v_init_op)
+        a,b=session.run([input_layer,out_rho])
+        #print(a,b)
 
     figure()
     e2,r2=dd.transpose()
     plot(epsilon,rho,"-",alpha=0.5)
     plot(e2,r2,',',alpha=0.1)
+    
+    plot(a,b)
+
     xlabel(r"$\beta$")
     ylabel(r"$\rho$")
     show()
