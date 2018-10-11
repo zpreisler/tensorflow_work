@@ -55,16 +55,15 @@ def main(argv):
 
     print("q:",q,q.shape)
 
-
-    t=linspace(1,8,256)
-    t=t.reshape(256,1)
+    t=linspace(1,8,2048)
+    t=t.reshape(2048,1)
     print("t:",t,t.shape)
 
     dataset=tf.data.Dataset.from_tensor_slices({'a': q,'b': w})
     vdataset=tf.data.Dataset.from_tensor_slices({'a': t, 'b': t})
 
     train_dataset=dataset.repeat().shuffle(len(q)).batch(256)
-    v_dataset=vdataset.batch(256)
+    v_dataset=vdataset.batch(2048)
 
     iterator=tf.data.Iterator.from_structure(train_dataset.output_types,
             train_dataset.output_shapes)
@@ -86,19 +85,25 @@ def main(argv):
     train=optimizer.minimize(loss)
     init_vars=tf.group(tf.global_variables_initializer())
 
+    saver=tf.train.Saver()
+
     with tf.Session() as session: 
         session.run(init_vars)
         session.run(init_op)
 
+        saver.restore(session,"log/last.ckpt")
+
         for i in range(10000):
-            l,_=session.run([loss,train],feed_dict={rate: 5e-2})
+            l,_=session.run([loss,train],feed_dict={rate: 1e-3})
             if i%500 is 0:
                 print(i,l)
 
         for i in range(25000):
-            l,_=session.run([loss,train],feed_dict={rate: 1e-3})
+            l,_=session.run([loss,train],feed_dict={rate: 1e-4})
             if i%500 is 0:
                 print(i,l)
+
+        saver.save(session,"log/last.ckpt")
 
         session.run(v_init_op)
         a,b=session.run([input_layer,out_rho])
