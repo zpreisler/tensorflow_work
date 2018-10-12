@@ -1,10 +1,11 @@
 class network(object):
-    def __init__(self,inputs,name='network'):
+    def __init__(self,inputs,output_dim=1,name='network'):
         import tensorflow as tf
         print("Initialize %s"%name)
-        self.build_graph(inputs,name=name)
+        self.rate=tf.placeholder(tf.float64)
+        self.build_graph(inputs,output_dim=output_dim,name=name)
 
-    def build_graph(self,inputs,name='network'):
+    def build_graph(self,inputs,output_dim,name='network'):
         import tensorflow as tf
         with tf.variable_scope(name):
             self.dense_1=tf.layers.dense(inputs=inputs,
@@ -18,40 +19,61 @@ class network(object):
                     name='d2')
 
             self.dense_3=tf.layers.dense(inputs=self.dense_2,
-                    units=1,
+                    units=output_dim,
                     activation=tf.nn.tanh,
                     name='output_layer')
 
             self.output_layer=self.dense_3
 
+    def define_loss(self,output_layer):
+        import tensorflow as tf
+        self.loss=tf.reduce_mean(
+                tf.nn.l2_loss(
+                    self.output_layer-output_layer
+                    )
+                )
+
+    def define_optimizer(self,name="AdamOptimizer"):
+        import tensorflow as tf
+        self.optimizer=tf.train.AdamOptimizer(learning_rate=self.rate)
+
+    def define_training(self):
+        self.train=self.optimizer.minimize(self.loss)
+
 class flow(object):
     def __init__(self,name='flow'):
         import tensorflow as tf
-        self.define_dataset()
 
-        self.nn=network(self.input_layer,name="Kagami")
+        self.c=data_feeder(files='eos/fluid*.conf',
+                add_data=['.en','.rho'])
 
-        print("Initialize Flow")
-        self.rate=tf.placeholder(tf.float64)
-        self.define_loss()
-        self.define_optimizer()
-        self.define_training()
-
-    def get_data(self):
-        self.c=data_feeder('eos/fluid*.conf',add_data=['.en','.rho'])
         self.data=self.c.feed(['epsilon','pressure','.en','.rho'])
-        self._data_=self.c.feed_data(['epsilon','pressure','.en','.rho'])
+        self.data_all=self.c.feed_data(['epsilon','pressure','.en','.rho'])
 
-    def define_dataset(self,n_eval=1024):
+        inputs=self.data[:,:1] #epsilon,pressure
+        outputs=self.data[:,3:4] #rho
+
+        next_element,self.init_train_op,self.init_eval_op=self.data_pipeline(inputs=inputs,
+                outputs=outputs)
+
+        self.input_layer=next_element['inputs']
+        self.output_layer=next_element['outputs']
+
+        """
+        Network
+        """
+        self.nn=network(self.input_layer,output_dim=1,name="Kagami")
+
+        self.nn.define_loss(self.output_layer)
+        self.nn.define_optimizer()
+        self.nn.define_training()
+
+    def data_pipeline(self,inputs=None,outputs=None,n_eval=1024):
         import tensorflow as tf
         from numpy import linspace
         """
         dataset
         """
-        self.get_data()
-        inputs=self.data[:,0].reshape(-1,1)
-        outputs=self.data[:,3].reshape(-1,1)
-
         dataset=tf.data.Dataset.from_tensor_slices( 
                 {'inputs': inputs,
                     'outputs': outputs}
@@ -69,25 +91,10 @@ class flow(object):
                 train_dataset.output_shapes)
         next_element=iterator.get_next()
 
-        self.init_train_op=iterator.make_initializer(train_dataset)
-        self.init_eval_op=iterator.make_initializer(eval_dataset)
+        init_train_op=iterator.make_initializer(train_dataset)
+        init_eval_op=iterator.make_initializer(eval_dataset)
 
-        self.input_layer=next_element['inputs']
-        self.output_layer=next_element['outputs']
-
-    def define_loss(self):
-        import tensorflow as tf
-        self.loss=tf.reduce_mean(
-                tf.nn.l2_loss(
-                    self.nn.output_layer-self.output_layer
-                    ))
-
-    def define_training(self):
-        self.train=self.optimizer.minimize(self.loss)
-
-    def define_optimizer(self,name="AdamOptimizer"):
-        import tensorflow as tf
-        self.optimizer=tf.train.AdamOptimizer(learning_rate=self.rate)
+        return next_element,init_train_op,init_eval_op
 
 from myutils import configuration,data
 class data_feeder(configuration):

@@ -32,7 +32,7 @@ def main(argv):
             pass
 
         for i in range(5000):
-            l,_=session.run([fl.loss,fl.train],feed_dict={fl.rate: 1e-2})
+            l,_=session.run([fl.nn.loss,fl.nn.train],feed_dict={fl.nn.rate: 1e-2})
             if i%500 is 0:
                 print(i,l)
 
@@ -44,7 +44,7 @@ def main(argv):
 
     figure()
     plot(epsilon,rho,"-",alpha=0.5)
-    plot(fl._data_[:,0],fl._data_[:,3],',',alpha=0.1)
+    plot(fl.data_all[:,0],fl.data_all[:,3],',',alpha=0.1)
     
     plot(a,b)
 
