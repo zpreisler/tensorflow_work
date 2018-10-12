@@ -27,6 +27,23 @@ class network(object):
 class flow(object):
     def __init__(self,name='flow'):
         import tensorflow as tf
+        self.define_dataset()
+
+        self.nn=network(self.input_layer,name="Kagami")
+
+        print("Initialize Flow")
+        self.rate=tf.placeholder(tf.float64)
+        self.define_loss()
+        self.define_optimizer()
+        self.define_training()
+
+    def get_data(self):
+        self.c=data_feeder('eos/fluid*.conf',add_data=['.en','.rho'])
+        self.data=self.c.feed(['epsilon','pressure','.en','.rho'])
+        self._data_=self.c.feed_data(['epsilon','pressure','.en','.rho'])
+
+    def define_dataset(self):
+        import tensorflow as tf
         """
         dataset
         """
@@ -46,28 +63,21 @@ class flow(object):
 
         self.init_op=iterator.make_initializer(train_dataset)
         self.input_layer=next_element['inputs']
-        output_layer=next_element['outputs']
+        self.output_layer=next_element['outputs']
 
-        self.nn=network(self.input_layer,name="Kagami")
+    def define_loss(self):
+        import tensorflow as tf
+        self.loss=tf.reduce_mean(
+                tf.nn.l2_loss(
+                    self.nn.output_layer-self.output_layer
+                    ))
 
-        print("Initialize Flow")
-        self.rate=tf.placeholder(tf.float64,1)
-        out_rho=self.nn.output_layer
-
-        self.loss=tf.reduce_mean(tf.nn.l2_loss((out_rho-output_layer)))
-        self.define_optimizer()
-
+    def define_training(self):
         self.train=self.optimizer.minimize(self.loss)
-
-    def get_data(self):
-        self.c=data_feeder('eos/fluid*.conf',add_data=['.en','.rho'])
-        self.data=self.c.feed(['epsilon','pressure','.en','.rho'])
-        self._data_=self.c.feed_data(['epsilon','pressure','.en','.rho'])
 
     def define_optimizer(self,name="AdamOptimizer"):
         import tensorflow as tf
-        #self.optimizer=tf.train.AdamOptimizer(learning_rate=self.rate)
-        self.optimizer=tf.train.AdamOptimizer(learning_rate=1e-2)
+        self.optimizer=tf.train.AdamOptimizer(learning_rate=self.rate)
 
 from myutils import configuration,data
 class data_feeder(configuration):
