@@ -8,12 +8,12 @@ class network(object):
         import tensorflow as tf
         with tf.variable_scope(name):
             self.dense_1=tf.layers.dense(inputs=inputs,
-                    units=5,
+                    units=6,
                     activation=tf.nn.tanh,
                     name='d1')
 
             self.dense_2=tf.layers.dense(inputs=self.dense_1,
-                    units=5,
+                    units=4,
                     activation=tf.nn.tanh,
                     name='d2')
 
@@ -42,8 +42,9 @@ class flow(object):
         self.data=self.c.feed(['epsilon','pressure','.en','.rho'])
         self._data_=self.c.feed_data(['epsilon','pressure','.en','.rho'])
 
-    def define_dataset(self):
+    def define_dataset(self,n_eval=1024):
         import tensorflow as tf
+        from numpy import linspace
         """
         dataset
         """
@@ -55,13 +56,22 @@ class flow(object):
                 {'inputs': inputs,
                     'outputs': outputs}
                 )
+        train_dataset=dataset.repeat().shuffle(256).batch(256)
 
-        train_dataset=dataset.repeat().batch(64)
+        inputs=linspace(inputs.min(),inputs.max(),n_eval).reshape(-1,1)
+        dataset=tf.data.Dataset.from_tensor_slices( 
+                {'inputs': inputs,
+                    'outputs': inputs}
+                )
+        eval_dataset=dataset.repeat().batch(n_eval)
+
         iterator=tf.data.Iterator.from_structure(train_dataset.output_types,
                 train_dataset.output_shapes)
         next_element=iterator.get_next()
 
-        self.init_op=iterator.make_initializer(train_dataset)
+        self.init_train_op=iterator.make_initializer(train_dataset)
+        self.init_eval_op=iterator.make_initializer(eval_dataset)
+
         self.input_layer=next_element['inputs']
         self.output_layer=next_element['outputs']
 
