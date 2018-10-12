@@ -56,3 +56,27 @@ class data_feeder(configuration):
             d+=[dd]
         return array(d)
 
+    def feed_data(self,names=[],dnames=[]):
+        from numpy import array
+        d=[]
+        for x in self.dconf:
+            dd=[]
+            v=[x[name] for name in names]
+            w=[x[name].data for name in dnames]
+            
+            print(w) 
+            #for i,j in zip(*w):
+            #    print(i,j)
+
+            #for i,j in zip(*[w[0].data,w[1].data]):
+            #   yy print(i,j)
+            #print(w)
+            dd+=v
+
+            d+=[dd]
+
+        return array(d)
+
+
+
+

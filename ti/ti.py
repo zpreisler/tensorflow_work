@@ -30,7 +30,7 @@ def main(argv):
     from model.model import network,data_feeder
     print("Reading configurations")
 
-    c=data_feeder('eos/fluid*.conf',add_data=['.en','.rho'])
+    c=data_feeder('eos/fluid8?.conf',add_data=['.en','.rho'])
 
     d=c.dconf
 
@@ -38,7 +38,9 @@ def main(argv):
     epsilon=c.get('epsilon')
 
     a=c.feed(['epsilon','.rho','.en'])
-    print(a)
+    b=c.feed_data(['epsilon'],['.rho','.en'])
+    #print(a)
+    print(b)
 
     dd=feeder2(d)
     fd=dd.transpose()
