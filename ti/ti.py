@@ -44,7 +44,7 @@ def main(argv):
 
     figure()
     plot(epsilon,rho,"-",alpha=0.5)
-    #plot(q,w,',',alpha=0.1)
+    plot(fl._data_[:,0],fl._data_[:,3],',',alpha=0.1)
     
     plot(a,b)
 
