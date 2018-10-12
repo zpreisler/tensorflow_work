@@ -57,26 +57,19 @@ class data_feeder(configuration):
         return array(d)
 
     def feed_data(self,names=[],dnames=[]):
-        from numpy import array
+        from numpy import array,append,vstack,concatenate,ones,hstack,full
         d=[]
         for x in self.dconf:
-            dd=[]
-            v=[x[name] for name in names]
+            t=[]
             w=[x[name].data for name in dnames]
-            
-            print(w) 
-            #for i,j in zip(*w):
-            #    print(i,j)
+            m=min([len(y) for y in w])
 
-            #for i,j in zip(*[w[0].data,w[1].data]):
-            #   yy print(i,j)
-            #print(w)
-            dd+=v
+            for name in names:
+                v=float(*x[name])
+                t+=[full(m,v)]
 
-            d+=[dd]
+            w=array(t+w).transpose()
+            d+=[w]
 
-        return array(d)
-
-
-
-
+        d=concatenate(d)
+        return d

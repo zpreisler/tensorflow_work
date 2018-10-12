@@ -32,42 +32,22 @@ def main(argv):
 
     c=data_feeder('eos/fluid8?.conf',add_data=['.en','.rho'])
 
-    d=c.dconf
+    #d=c.dconf
 
     rho=c.get('.rho')
     epsilon=c.get('epsilon')
 
     a=c.feed(['epsilon','.rho','.en'])
-    b=c.feed_data(['epsilon'],['.rho','.en'])
-    #print(a)
-    print(b)
+    b=c.feed_data(['epsilon','pressure'],['.rho','.en'])
 
-    dd=feeder2(d)
-    fd=dd.transpose()
-
-    print("dd",dd.shape)
-    print(dd[:,0])
-    e=fd[0]
-    e=e.reshape(1,-1)
-    print(e.shape)
-
-    q=[]
-    for e in fd[0]:
-        q+=[[e]]
-    q=array(q)
-
-    w=[]
-    for e in fd[1]:
-        w+=[[e]]
-    w=array(w)
-
-    #print("q:",q,q.shape)
+    q=b[:,0]
+    w=b[:,2]
 
     t=linspace(1,8,2048)
     t=t.reshape(2048,1)
-    #print("t:",t,t.shape)
 
-    dataset=tf.data.Dataset.from_tensor_slices({'a': q,'b': w})
+    dataset=tf.data.Dataset.from_tensor_slices({'a': q.reshape(-1,1),
+        'b': w.reshape(-1,1)})
     vdataset=tf.data.Dataset.from_tensor_slices({'a': t, 'b': t})
 
     train_dataset=dataset.repeat().shuffle(len(q)).batch(256)
@@ -123,9 +103,9 @@ def main(argv):
         #print(a,b)
 
     figure()
-    e2,r2=dd.transpose()
+    #e2,r2=dd.transpose()
     plot(epsilon,rho,"-",alpha=0.5)
-    plot(e2,r2,',',alpha=0.1)
+    plot(q,w,',',alpha=0.1)
     
     plot(a,b)
 
