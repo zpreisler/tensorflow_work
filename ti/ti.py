@@ -3,23 +3,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import tensorflow as tf
-def feeder(d):
-    from numpy import array
-    dd=[]
-    for a in d:
-        _eps=float(*a['epsilon'])
-        for _rho in a['.rho'].data:
-            dd+=[[_eps,_rho]]
-    return array(dd)
-
-def feeder2(d):
-    from numpy import array
-    dd=[]
-    for a in d:
-        _eps=float(*a['epsilon'])
-        _rho=a['.rho'].data.mean()
-        dd+=[[_eps,_rho]]
-    return array(dd)
 
 def main(argv):
     from glob import glob
@@ -27,12 +10,11 @@ def main(argv):
     from pprint import pprint
     from matplotlib.pyplot import figure,show,plot,xlabel,ylabel
     from numpy import array,linspace
-    from model.model import network,data_feeder
+    from model.model import network,data_feeder,flow
     print("Reading configurations")
 
+    fl=flow()
     c=data_feeder('eos/fluid8?.conf',add_data=['.en','.rho'])
-
-    #d=c.dconf
 
     rho=c.get('.rho')
     epsilon=c.get('epsilon')
@@ -111,7 +93,7 @@ def main(argv):
 
     xlabel(r"$\beta$")
     ylabel(r"$\rho$")
-    show()
+    #show()
 
 if __name__=="__main__":
     tf.app.run()

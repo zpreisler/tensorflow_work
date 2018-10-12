@@ -1,5 +1,6 @@
-class network:
+class network(object):
     def __init__(self,inputs,name='network'):
+        import tensorflow as tf
         print("Initialize %s"%name)
         self.build_graph(inputs,name=name)
 
@@ -22,6 +23,29 @@ class network:
                     name='output_layer')
 
             self.output_layer=self.dense_3
+
+class flow(object):
+    def __init__(self,name='flow'):
+        import tensorflow as tf
+        """
+        dataset
+        """
+        self.get_data()
+
+        print("Initialize Flow")
+        self.rate=tf.placeholder(tf.float64,1)
+
+        self.define_optimizer()
+
+    def get_data(self):
+        self.c=data_feeder('eos/fluid7?.conf',add_data=['.en','.rho'])
+        self.data=self.c.feed(['epsilon','pressure','.en','.rho'])
+        self._data_=self.c.feed_data(['epsilon','pressure'],['.en','.rho'])
+        print(self._data_)
+
+    def define_optimizer(self,name="AdamOptimizer"):
+        import tensorflow as tf
+        self.optimizer=tf.train.AdamOptimizer(learning_rate=self.rate)
 
 from myutils import configuration,data
 class data_feeder(configuration):
@@ -58,15 +82,22 @@ class data_feeder(configuration):
 
     def feed_data(self,names=[],dnames=[]):
         from numpy import array,append,vstack,concatenate,ones,hstack,full
+        #n=names+dnames
+        #print(n)
+        #d=self.conf
+        #t=[x for x in n if isinstance(x,data) is True]
+        #print(t)
+
         d=[]
         for x in self.dconf:
             t=[]
-            w=[x[name].data for name in dnames]
+            w=[x[name].data for name in dnames if isinstance(x[name],data) is True]
             m=min([len(y) for y in w])
 
             for name in names:
-                v=float(*x[name])
-                t+=[full(m,v)]
+                if isinstance(x[name],data) is False:
+                    v=float(*x[name])
+                    t+=[full(m,v)]
 
             w=array(t+w).transpose()
             d+=[w]
