@@ -28,7 +28,7 @@ def main(argv):
             pass
 
         for i in range(25000):
-            l,_=session.run([fl.nn.loss,fl.nn.train],feed_dict={fl.nn.rate: 1e-2})
+            l,_=session.run([fl.nn.loss,fl.nn.train],feed_dict={fl.nn.rate: 1e-3})
             if i%500 is 0:
                 print(i,l)
 

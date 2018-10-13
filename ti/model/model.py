@@ -16,12 +16,12 @@ class network(object):
         import tensorflow as tf
         with tf.variable_scope(name):
             self.dense_1=tf.layers.dense(inputs=inputs,
-                    units=9,
+                    units=16,
                     activation=tf.nn.tanh,
                     name='d1')
 
             self.dense_2=tf.layers.dense(inputs=self.dense_1,
-                    units=6,
+                    units=8,
                     activation=tf.nn.tanh,
                     name='d2')
 
