@@ -57,8 +57,8 @@ class flow(object):
         self.data=self.c.feed(['epsilon','pressure','.en','.rho'])
         self.data_all=self.c.feed_data(['epsilon','pressure','.en','.rho'])
 
-        inputs=self.data[:,:1] #epsilon,pressure
-        outputs=self.data[:,3:4] #rho
+        inputs=self.data[:,:2] #epsilon,pressure
+        outputs=self.data[:,2:] #en,rho
 
         next_element,self.init_train_op,self.init_eval_op=self.data_pipeline(inputs=inputs,
                 outputs=outputs)
@@ -68,9 +68,9 @@ class flow(object):
         """
         self.nn=network(next_element['inputs'],next_element['outputs'],name="Kagami")
 
-    def data_pipeline(self,inputs=None,outputs=None,batch=2048):
+    def data_pipeline(self,inputs=None,outputs=None,batch=2048,n=1024):
         import tensorflow as tf
-        from numpy import linspace,zeros
+        from numpy import linspace,zeros,array
         """
         train dataset
         """
@@ -93,14 +93,18 @@ class flow(object):
         """
         eval dataset
         """
-        inputs=linspace(inputs.min(),inputs.max(),1024).reshape(-1,1)
-        z=zeros(inputs.shape)
-        print(z,z.shape)
+
+        x=[]
+        for k in inputs.transpose():
+            x+=[linspace(k.min(),k.max(),n)]
+        x=array(x).transpose()
+        z=zeros((n,outputs.shape[-1]))
+
         dataset=tf.data.Dataset.from_tensor_slices( 
-                {'inputs': inputs,
+                {'inputs': x,
                     'outputs': z}
                 )
-        eval_dataset=dataset.batch(1024)
+        eval_dataset=dataset.batch(n)
 
         init_eval_op=iterator.make_initializer(eval_dataset)
 

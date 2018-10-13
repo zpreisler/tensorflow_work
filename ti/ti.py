@@ -5,17 +5,13 @@ from __future__ import print_function
 import tensorflow as tf
 
 def main(argv):
-    from glob import glob
-    from myutils import configuration
     from pprint import pprint
     from matplotlib.pyplot import figure,show,plot,xlabel,ylabel
-    from numpy import array,linspace
     from model.model import network,data_feeder,flow
-    print("Reading configurations")
-
     fl=flow()
 
     rho=fl.c.get('.rho')
+    en=fl.c.get('.en')
     epsilon=fl.c.get('epsilon')
 
     init_vars=tf.group(tf.global_variables_initializer())
@@ -46,7 +42,14 @@ def main(argv):
     plot(epsilon,rho,"-",alpha=0.5)
     plot(fl.data_all[:,0],fl.data_all[:,3],',',alpha=0.1)
     
-    plot(a,b)
+    plot(a[:,0],b[:,1])
+    xlabel(r"$\beta$")
+    ylabel(r"$\rho$")
+
+    figure()
+    plot(epsilon,en,"-",alpha=0.5)
+    plot(fl.data_all[:,0],fl.data_all[:,2],',',alpha=0.1)
+    plot(a[:,0],b[:,0])
 
     xlabel(r"$\beta$")
     ylabel(r"$\rho$")
