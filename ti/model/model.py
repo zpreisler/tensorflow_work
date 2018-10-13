@@ -1,9 +1,16 @@
 class network(object):
-    def __init__(self,inputs,output_dim=1,name='network'):
+    def __init__(self,inputs,outputs,name='network'):
         import tensorflow as tf
         print("Initialize %s"%name)
         self.rate=tf.placeholder(tf.float64)
-        self.build_graph(inputs,output_dim=output_dim,name=name)
+        self.inputs=inputs
+        self.outputs=outputs
+
+        self.build_graph(inputs,output_dim=outputs.shape[-1],name=name)
+
+        self.define_loss(outputs)
+        self.define_optimizer()
+        self.define_training()
 
     def build_graph(self,inputs,output_dim,name='network'):
         import tensorflow as tf
@@ -33,7 +40,7 @@ class network(object):
                     )
                 )
 
-    def define_optimizer(self,name="AdamOptimizer"):
+    def define_optimizer(self,name="optimizer"):
         import tensorflow as tf
         self.optimizer=tf.train.AdamOptimizer(learning_rate=self.rate)
 
@@ -56,42 +63,45 @@ class flow(object):
         next_element,self.init_train_op,self.init_eval_op=self.data_pipeline(inputs=inputs,
                 outputs=outputs)
 
-        self.input_layer=next_element['inputs']
-        self.output_layer=next_element['outputs']
-
         """
         Network
         """
-        self.nn=network(self.input_layer,output_dim=1,name="Kagami")
+        self.nn=network(next_element['inputs'],next_element['outputs'],name="Kagami")
 
-        self.nn.define_loss(self.output_layer)
-        self.nn.define_optimizer()
-        self.nn.define_training()
-
-    def data_pipeline(self,inputs=None,outputs=None,n_eval=1024):
+    def data_pipeline(self,inputs=None,outputs=None,batch=2048):
         import tensorflow as tf
-        from numpy import linspace
+        from numpy import linspace,zeros
         """
-        dataset
+        train dataset
         """
+        length=len(inputs)
+        if batch<length:
+            batch=length
+
         dataset=tf.data.Dataset.from_tensor_slices( 
                 {'inputs': inputs,
                     'outputs': outputs}
                 )
-        train_dataset=dataset.repeat().shuffle(256).batch(256)
+        train_dataset=dataset.repeat().shuffle(length).batch(batch)
 
-        inputs=linspace(inputs.min(),inputs.max(),n_eval).reshape(-1,1)
-        dataset=tf.data.Dataset.from_tensor_slices( 
-                {'inputs': inputs,
-                    'outputs': inputs}
-                )
-        eval_dataset=dataset.repeat().batch(n_eval)
-
-        iterator=tf.data.Iterator.from_structure(train_dataset.output_types,
+        iterator=tf.data.Iterator.from_structure(
+                train_dataset.output_types,
                 train_dataset.output_shapes)
         next_element=iterator.get_next()
-
         init_train_op=iterator.make_initializer(train_dataset)
+
+        """
+        eval dataset
+        """
+        inputs=linspace(inputs.min(),inputs.max(),1024).reshape(-1,1)
+        z=zeros(inputs.shape)
+        print(z,z.shape)
+        dataset=tf.data.Dataset.from_tensor_slices( 
+                {'inputs': inputs,
+                    'outputs': z}
+                )
+        eval_dataset=dataset.batch(1024)
+
         init_eval_op=iterator.make_initializer(eval_dataset)
 
         return next_element,init_train_op,init_eval_op

@@ -39,7 +39,7 @@ def main(argv):
         saver.save(session,"log/last.ckpt")
 
         session.run(fl.init_eval_op)
-        a,b=session.run([fl.input_layer,fl.nn.output_layer])
+        a,b=session.run([fl.nn.inputs,fl.nn.output_layer])
         print(a,b)
 
     figure()
