@@ -27,7 +27,7 @@ def main(argv):
         except tf.errors.NotFoundError:
             pass
 
-        for i in range(5000):
+        for i in range(25000):
             l,_=session.run([fl.nn.loss,fl.nn.train],feed_dict={fl.nn.rate: 1e-2})
             if i%500 is 0:
                 print(i,l)

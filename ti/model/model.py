@@ -16,18 +16,17 @@ class network(object):
         import tensorflow as tf
         with tf.variable_scope(name):
             self.dense_1=tf.layers.dense(inputs=inputs,
-                    units=6,
+                    units=9,
                     activation=tf.nn.tanh,
                     name='d1')
 
             self.dense_2=tf.layers.dense(inputs=self.dense_1,
-                    units=4,
+                    units=6,
                     activation=tf.nn.tanh,
                     name='d2')
 
             self.dense_3=tf.layers.dense(inputs=self.dense_2,
                     units=output_dim,
-                    activation=tf.nn.tanh,
                     name='output_layer')
 
             self.output_layer=self.dense_3
@@ -75,7 +74,7 @@ class flow(object):
         train dataset
         """
         length=len(inputs)
-        if batch<length:
+        if batch>length:
             batch=length
 
         dataset=tf.data.Dataset.from_tensor_slices( 
